@@ -16,10 +16,11 @@ local function createESP(player)
         name = Drawing.new("Text")
     }
     
-    -- Box setup
+    -- Box setup - transparent with outline
     esp.box.Thickness = 2
-    esp.box.Filled = false
+    esp.box.Filled = true
     esp.box.Color = Color3.fromRGB(255, 0, 0)
+    esp.box.Transparency = 0.3  -- Semi-transparent fill
     esp.box.Visible = false
     
     -- Name setup
