@@ -52,11 +52,11 @@ end
 Players.PlayerAdded:Connect(createESP)
 Players.PlayerRemoving:Connect(removeESP)
 
--- Toggle with Left Shift
+-- Toggle with Left Alt
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     
-    if input.KeyCode == Enum.KeyCode.LeftShift then
+    if input.KeyCode == Enum.KeyCode.LeftAlt then
         espEnabled = not espEnabled
         print("ESP " .. (espEnabled and "Enabled" or "Disabled"))
     end
