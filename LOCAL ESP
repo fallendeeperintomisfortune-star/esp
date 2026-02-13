@@ -1,0 +1,97 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+local espObjects = {}
+local espEnabled = true
+
+local function createESP(player)
+    if player == LocalPlayer then return end
+    if espObjects[player] then return end
+    
+    local esp = {
+        box = Drawing.new("Square"),
+        name = Drawing.new("Text")
+    }
+    
+    -- Box setup
+    esp.box.Thickness = 2
+    esp.box.Filled = false
+    esp.box.Color = Color3.fromRGB(255, 0, 0)
+    esp.box.Visible = false
+    
+    -- Name setup
+    esp.name.Size = 18
+    esp.name.Center = true
+    esp.name.Outline = true
+    esp.name.Color = Color3.fromRGB(255, 255, 255)
+    esp.name.Text = player.Name
+    esp.name.Visible = false
+    
+    espObjects[player] = esp
+end
+
+local function removeESP(player)
+    local esp = espObjects[player]
+    if esp then
+        esp.box:Remove()
+        esp.name:Remove()
+        espObjects[player] = nil
+    end
+end
+
+-- Create ESP for existing players
+for _, player in pairs(Players:GetPlayers()) do
+    createESP(player)
+end
+
+-- Handle new players
+Players.PlayerAdded:Connect(createESP)
+Players.PlayerRemoving:Connect(removeESP)
+
+-- Toggle with Left Shift
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    if input.KeyCode == Enum.KeyCode.LeftShift then
+        espEnabled = not espEnabled
+        print("ESP " .. (espEnabled and "Enabled" or "Disabled"))
+    end
+end)
+
+-- Update ESP every frame
+RunService.RenderStepped:Connect(function()
+    for player, esp in pairs(espObjects) do
+        local char = player.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        local head = char and char:FindFirstChild("Head")
+        
+        if hrp and head and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
+            local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+            local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+            local legPos = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0))
+            
+            if onScreen then
+                local height = math.abs(headPos.Y - legPos.Y)
+                local width = height / 2
+                
+                -- Update box
+                esp.box.Size = Vector2.new(width, height)
+                esp.box.Position = Vector2.new(screenPos.X - width / 2, headPos.Y)
+                esp.box.Visible = espEnabled
+                
+                -- Update name
+                esp.name.Position = Vector2.new(screenPos.X, headPos.Y - 20)
+                esp.name.Visible = espEnabled
+            else
+                esp.box.Visible = false
+                esp.name.Visible = false
+            end
+        else
+            esp.box.Visible = false
+            esp.name.Visible = false
+        end
+    end
+end)
